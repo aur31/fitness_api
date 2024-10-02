@@ -38,7 +38,7 @@ class GuideController extends Controller
                 $guide->fill($validator);
                 
 
-                $guide->save();
+                $guide->save(); 
 
                 $response = [
                     'success' => true,
