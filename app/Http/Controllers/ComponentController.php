@@ -2,101 +2,55 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ComponentResource;
-use App\Models\Components;
-use Exception;
+use App\Models\Component;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ComponentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $components = Component::all();
+        return response()->json($components);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //return $request;
-        $validator = $request->validate([
-            //'id_utilisateur' => 'required|string|max:60',
-            'name' => 'required|string|max:60',
+        $validatedData = $request->validate([
+            'image' => 'nullable|string',
+            'name' => 'required|string',
         ]);
 
-        if(!$request->hasFile('image')){
-            $response = [
-                'success' => false,
-                'message' => "Erreur Component, Pas d'image",
-            ];
-            return response($response, 400);
-        }
+        $component = Component::create([
+            'component_id' => Str::uuid()->toString(),
+            'image' => $validatedData['image'],
+            'name' => $validatedData['name'],
+        ]);
 
-
-            try{
-                
-                $image = $request->file('image');
-
-                // Generate a unique filename for the image
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-
-                // Store the image in the public/images directory
-                $imagePath = $image->storeAs('public/images', $imageName);
-
-                // You can optionally save the image path to the database
-                $imageUrl = Storage::url($imagePath);
-
-                $comp = new Components();
-                $comp->fill($validator);
-                //return ;
-                
-                //$grille->promotion = $grille->promotion == 0 ? '0' : '1'; 
-                //return $grille->promotion;
-                $comp->image = $imageUrl;
-
-                $comp->save();
-
-                $response = [
-                    'success' => true,
-                    'message' => "Component enregistrer",
-                    'component' => new ComponentResource($comp),
-                ];
-                return response($response, 200);
-            }catch(Exception $e){
-                $response = [
-                    'success' => false,
-                    'message' => $e,
-                ];
-                return response($response, 404);
-            }
+        return response()->json($component, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Component $component)
     {
-        //
+        return response()->json($component);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Component $component)
     {
-        //
+        $validatedData = $request->validate([
+            'image' => 'nullable|string',
+            'name' => 'sometimes|required|string',
+        ]);
+
+        $component->update($validatedData);
+
+        return response()->json($component);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Component $component)
     {
-        //
+        $component->delete();
+        return response()->json(null, 204);
     }
+
 }

@@ -2,80 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\GuideResource;
 use App\Models\Guide;
-use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class GuideController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $guides = Guide::all();
+        return response()->json($guides);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //return $request;
-        $validator = $request->validate([
-            'label' => 'required|string|max:32',
-            'guide' => 'required|string|max:500',
-            'diet_id' => 'required|string|max:36',
+        $validatedData = $request->validate([
+            'guide' => 'required|string',
+            'status' => 'boolean',
+            'user_id' => 'required|exists:users,id',
         ]);
 
+        $guide = Guide::create([
+            'guide_id' => Str::uuid()->toString(),
+            'guide' => $validatedData['guide'],
+            'status' => $validatedData['status'] ?? true,
+            'user_id' => $validatedData['user_id'],
+        ]);
 
-            try{
-                
-                
-
-                $guide = new Guide();
-                $guide->fill($validator);
-                
-
-                $guide->save(); 
-
-                $response = [
-                    'success' => true,
-                    'message' => "Guide enregistrer",
-                    'guide' => new GuideResource($guide),
-                ];
-                return response($response, 200);
-            }catch(Exception $e){
-                $response = [
-                    'success' => false,
-                    'message' => $e,
-                ];
-                return response($response, 404);
-            }
+        return response()->json($guide, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Guide $guide)
     {
-        //
+        return response()->json($guide);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Guide $guide)
     {
-        //
+        $validatedData = $request->validate([
+            'guide' => 'sometimes|required|string',
+            'status' => 'sometimes|boolean',
+            'user_id' => 'sometimes|required|exists:users,id',
+        ]);
+
+        $guide->update($validatedData);
+
+        return response()->json($guide);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Guide $guide)
     {
-        //
+        $guide->delete();
+        return response()->json(null, 204);
     }
 }

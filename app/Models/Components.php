@@ -2,24 +2,35 @@
 
 namespace App\Models;
 
-use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Components extends Model
+class Component extends Model
 {
-    use HasFactory, Uuids;
+    use HasFactory;
 
-    public $incrementing = false;
-    public $timestamps = false;
-    public $table = 'components';
-    protected $keyType = 'string';
     protected $primaryKey = 'component_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    public $timestamps = false;
 
     protected $fillable = [
         'component_id',
-        'name',
         'image',
+        'name',
     ];
-    
+
+    public static function emptyComponent()
+    {
+        return new static();
+    }
+
+    public function toArray()
+    {
+        return [
+            'component_id' => $this->component_id,
+            'image' => $this->image,
+            'name' => $this->name,
+        ];
+    }
 }

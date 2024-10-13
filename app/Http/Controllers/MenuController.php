@@ -2,102 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\MenuResource;
-use App\Models\menu;
-use Exception;
+use App\Models\Menu;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class MenuController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $menus = Menu::all();
+        return response()->json($menus);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //return $request;
-        $validator = $request->validate([
-            //'id_utilisateur' => 'required|string|max:60',
-            'recipe' => 'required|string|max:1000',
-            'meal' => 'required|string|max:200',
+        $validatedData = $request->validate([
+            'recipe' => 'required|string',
+            'meal' => 'required|string',
+            'image' => 'nullable|string',
         ]);
 
-        if(!$request->hasFile('image')){
-            $response = [
-                'success' => false,
-                'message' => "Erreur d'ajout du menu, Pas d'image",
-            ];
-            return response($response, 400);
-        }
+        $menu = Menu::create([
+            'menu_id' => Str::uuid()->toString(),
+            'recipe' => $validatedData['recipe'],
+            'meal' => $validatedData['meal'],
+            'image' => $validatedData['image'],
+        ]);
 
-
-            try{
-                
-                $image = $request->file('image');
-
-                // Generate a unique filename for the image
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-
-                // Store the image in the public/images directory
-                $imagePath = $image->storeAs('public/images', $imageName);
-
-                // You can optionally save the image path to the database
-                $imageUrl = Storage::url($imagePath);
-
-                $men = new menu();
-                $men->fill($validator);
-                //return ;
-                
-                //$grille->promotion = $grille->promotion == 0 ? '0' : '1'; 
-                //return $grille->promotion;
-                $men->image = $imageUrl;
-
-                $men->save();
-
-                $response = [
-                    'success' => true,
-                    'message' => "Produit enregistrer",
-                    'grille' => new MenuResource($men),
-                ];
-                return response($response, 200);
-            }catch(Exception $e){
-                $response = [
-                    'success' => false,
-                    'message' => $e,
-                ];
-                return response($response, 404);
-            }
+        return response()->json($menu, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Menu $menu)
     {
-        //
+        return response()->json($menu);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Menu $menu)
     {
-        //
+        $validatedData = $request->validate([
+            'recipe' => 'sometimes|required|string',
+            'meal' => 'sometimes|required|string',
+            'image' => 'nullable|string',
+        ]);
+
+        $menu->update($validatedData);
+
+        return response()->json($menu);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Menu $menu)
     {
-        //
+        $menu->delete();
+        return response()->json(null, 204);
     }
 }

@@ -35,9 +35,9 @@ class UserAuthController extends Controller
 
         $user = User::where('email', $validator["email"])->first();
 
+        //return $user;
+        
         if ($user) {
-            
-
 
             if(Hash::check($validator["password"],$user->password)){
                 $response = [
@@ -133,14 +133,8 @@ class UserAuthController extends Controller
 
 
     public function logout (Request $request) {
-        $validator = $request->validate([
-            'email' => 'required|string|max:60',
-            'token' => 'required',
-        ]);
-
-
+    
         $result = $request->user()->token()->revoke();
-
         
         if($result == true){
             $response = [

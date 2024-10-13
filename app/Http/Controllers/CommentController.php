@@ -2,79 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\CommentResource;
 use App\Models\Comment;
-use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CommentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $comments = Comment::all();
+        return response()->json($comments);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //return $request;
-        $validator = $request->validate([
-            'user_id' => 'required|string|max:32',
-            'comment' => 'required|string|max:250',
+        $validatedData = $request->validate([
+            'user_id' => 'required|string|exists:users,id',
+            'comment' => 'required|string',
+            'status' => 'boolean',
         ]);
 
+        $comment = Comment::create([
+            'comment_id' => Str::uuid()->toString(),
+            'user_id' => $validatedData['user_id'],
+            'comment' => $validatedData['comment'],
+            'status' => $validatedData['status'] ?? true,
+        ]);
 
-            try{
-                
-                
-
-                $comm = new Comment();
-                $comm->fill($validator);
-                
-
-                $comm->save();
-
-                $response = [
-                    'success' => true,
-                    'message' => "Comment enregistrer",
-                    'comment' => new CommentResource($comm),
-                ];
-                return response($response, 200);
-            }catch(Exception $e){
-                $response = [
-                    'success' => false,
-                    'message' => $e,
-                ];
-                return response($response, 404);
-            }
+        return response()->json($comment, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Comment $comment)
     {
-        //
+        return response()->json($comment);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Comment $comment)
     {
-        //
+        $validatedData = $request->validate([
+            'comment' => 'sometimes|required|string',
+            'status' => 'sometimes|boolean',
+        ]);
+
+        $comment->update($validatedData);
+
+        return response()->json($comment);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Comment $comment)
     {
-        //
+        $comment->delete();
+        return response()->json(null, 204);
     }
+
 }

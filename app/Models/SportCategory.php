@@ -6,44 +6,41 @@ use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Comment extends Model
+class SportCategory extends Model
 {
     use HasFactory,Uuids;
 
-    protected $primaryKey = 'comment_id';
+    protected $primaryKey = 'sport_cat_id';
     public $incrementing = false;
     protected $keyType = 'string';
     public $timestamps = false;
+    public $table = 'sport_category';
 
     protected $fillable = [
-        'comment_id',
-        'user_id',
-        'comment',
+        'sport_cat_id',
+        'name',
         'status',
+        'description',
     ];
 
     protected $casts = [
         'status' => 'boolean',
     ];
 
-    public static function emptyComment()
+    public static function empty()
     {
-        return new static();
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
+        return new static([
+            'sport_cat_id' => '',
+        ]);
     }
 
     public function toArray()
     {
         return [
-            'comment_id' => $this->comment_id,
-            'user_id' => $this->user_id,
-            'comment' => $this->comment,
+            'sport_cat_id' => $this->sport_cat_id,
+            'name' => $this->name,
             'status' => $this->status,
+            'description' => $this->description,
         ];
     }
-
 }

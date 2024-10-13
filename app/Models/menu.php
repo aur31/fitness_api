@@ -24,7 +24,7 @@ class menu extends Model
         'image',
     ];
 
-    public function components(): BelongsToMany{
+    /*public function components(): BelongsToMany{
         return $this->belongsToMany(Components::class,'menu_component','menu_id','component_id');
-    }
+    }*/
 }

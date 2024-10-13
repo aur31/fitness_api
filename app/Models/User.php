@@ -2,66 +2,41 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use App\Traits\Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, Uuids;
+    use HasApiTokens, HasFactory, Notifiable,Uuids;
 
+    protected $primaryKey = 'user_id';
     public $incrementing = false;
-    public $timestamps = false;
     public $table = 'user';
     protected $keyType = 'string';
-    protected $primaryKey = 'user_id';
+    public $timestamps = false;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
-        'name',
-        'BMI',
-        'weight',
-        'height',
-        'day_counter_progression',
         'email',
+        'name',
+        'sex',
+        'password',
+        'status',
         'role',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
-        'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    protected $casts = [
+        'status' => 'boolean',
+        'role' => 'integer',
+        'deleted_at' => 'datetime',
+    ];
 
-    public function client(): HasMany
-    {
-        return $this->hasMany(Comment::class,"user_id","user_id");
-    }
 }

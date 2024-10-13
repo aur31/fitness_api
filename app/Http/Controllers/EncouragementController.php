@@ -2,92 +2,55 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EncouragementResource;
 use App\Models\Encouragement;
-use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EncouragementController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $encouragements = Encouragement::all();
+        return response()->json($encouragements);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        
-        if(!$request->hasFile('image')){
-            $response = [
-                'success' => false,
-                'message' => "Erreur Encouragement, Pas d'image",
-            ];
-            return response($response, 400);
-        }
+        $validatedData = $request->validate([
+            'encouragement' => 'required|string',
+            'user_id' => 'nullable|exists:user,user_id',
+        ]);
 
+        $encouragement = Encouragement::create([
+            'encouragement' => $validatedData['encouragement'],
+            'status' => $validatedData['status'] ?? 1,
+            'user_id' => $validatedData['user_id'],
+        ]);
 
-
-            try{
-
-                $image = $request->file('image');
-
-                // Generate a unique filename for the image
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-
-                // Store the image in the public/images directory
-                $imagePath = $image->storeAs('public/images', $imageName);
-
-                // You can optionally save the image path to the database
-                $imageUrl = Storage::url($imagePath);
-
-                
-                $encore = new Encouragement();
-                $encore->message = $imageUrl;
-                $encore->save();
-
-                $response = [
-                    'success' => true,
-                    'message' => "Encouragement enregistrer",
-                    'sport' => new EncouragementResource($encore),
-                ];
-                return response($response, 200);
-            }catch(Exception $e){
-                $response = [
-                    'success' => false,
-                    'message' => $e,
-                ];
-                return response($response, 404);
-            }
+        return response()->json($encouragement, 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Encouragement $encouragement)
     {
-        //
+        return response()->json($encouragement);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Encouragement $encouragement)
     {
-        //
+        $validatedData = $request->validate([
+            'encouragement' => 'sometimes|required|string',
+            'status' => 'sometimes|boolean',
+            'user_id' => 'sometimes|nullable|exists:users,id',
+        ]);
+
+        $encouragement->update($validatedData);
+
+        return response()->json($encouragement);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Encouragement $encouragement)
     {
-        //
+        $encouragement->delete();
+        return response()->json(null, 204);
     }
 }

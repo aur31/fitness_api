@@ -2,92 +2,102 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
-use Exception;
+use App\Models\SportExercise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ExerciseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $exercises = Exercise::all();
+
+        /*foreach ($exercises as $key => $value) {
+            # code...
+        }*/
+
+        foreach ($exercises as $exercise) {
+            # code...
+            $exercise->url = url(Storage::url($exercise->url));
+        }
+        
+        return response()->json($exercises);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        
-        if(!$request->hasFile('image')){
-            $response = [
-                'success' => false,
-                'message' => "Erreur Exercise, Pas d'image",
-            ];
-            return response($response, 400);
+
+        $request->validate([
+            'video' => 'required|file|max:100000', // Max 100MB
+            'name' => 'required|string|max:255',
+            'sport_cat_id' => 'required|string|max:255',
+        ]);
+
+        if ($request->hasFile('video')) {
+            $file = $request->file('video');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            
+            // Store the file in the public disk under the 'videos' directory
+            $path = $file->storeAs('videos', $fileName, 'public');
+
+            $exercise = Exercise::create([
+                'name' => $request->name,
+                'url' => $path,
+                'status' => $request->status ?? 1,
+            ]);
+
+            $sportExercise = SportExercise::create([
+                'sport_cat_id' => $request->sport_cat_id,
+                'exercise_id' => $exercise->exercise_id,
+            ]);
+
+            $exercise->url = url(Storage::url($exercise->url));
+            return response()->json($exercise, 200);
+
+            return response()->json([
+                'message' => 'Video uploaded successfully',
+                'path' => Storage::url($path), // Get the URL for the stored file
+                "link" => url(Storage::url($exercise->url))
+            ], 200);
         }
 
-
-
-            try{
-
-                $image = $request->file('image');
-
-                // Generate a unique filename for the image
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-
-                // Store the image in the public/images directory
-                $imagePath = $image->storeAs('public/images', $imageName);
-
-                // You can optionally save the image path to the database
-                $imageUrl = Storage::url($imagePath);
-
-                
-                $exer = new Exercise();
-                $exer->exercise_demo = $imageUrl;
-                $exer->save();
-
-                $response = [
-                    'success' => true,
-                    'message' => "Exercise enregistrer",
-                    'sport' => new ExerciseResource($exer),
-                ];
-                return response($response, 200);
-            }catch(Exception $e){
-                $response = [
-                    'success' => false,
-                    'message' => $e,
-                ];
-                return response($response, 404);
-            }
+        return response()->json(['message' => 'No video file provided'], 400);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Exercise $exercise)
     {
-        //
+        return response()->json($exercise);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Exercise $exercise)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'url' => 'nullable|url',
+            'status' => 'sometimes|boolean',
+        ]);
+
+        $exercise->update($validatedData);
+
+        return response()->json($exercise);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Exercise $exercise)
     {
-        //
+        $exercise->delete();
+        return response()->json(null, 204);
+    }
+
+    //THIS IS USE TO PLAY ALL VIDEOS
+    public function getVideoUrl($id)
+    {
+        $exercise = Exercise::findOrFail($id);
+        $videoUrl = url(Storage::url($exercise->url));
+
+        return response()->json([
+            'video_url' => $videoUrl
+        ]);
     }
 }
