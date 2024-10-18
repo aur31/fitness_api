@@ -29,6 +29,7 @@ Route::apiResource('sport-categories', SportCategoryController::class);
 Route::post('/store/exercises', [ExerciseController::class, 'store']);
 Route::get('/videos/{id}/url', [ExerciseController::class, 'getVideoUrl']); //PLAY THE VIDEO
 Route::apiResource('exercises', ExerciseController::class);
+Route::get('/category/exercise/{id_category}', [ExerciseController::class, 'getCategoryExercises']);
 
 
 

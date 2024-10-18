@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Exercise;
+use App\Models\SportCategory;
 use App\Models\SportExercise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -25,6 +26,25 @@ class ExerciseController extends Controller
         
         return response()->json($exercises);
     }
+
+    public function getCategoryExercises($id_category)
+    {
+
+        $cat = SportExercise::where("sport_cat_id",$id_category)
+        ->join("exercise","exercise.exercise_id","=","sport_execise.exercise_id")
+        ->get();
+
+        
+
+        foreach ($cat as $exercise) {
+            # code...
+            $exercise->url = url(Storage::url($exercise->url));
+        }
+        
+        return response()->json($cat);
+    }
+
+    
 
     public function store(Request $request)
     {
